@@ -1,0 +1,7 @@
+{
+  "status": 404,
+  "headers": {
+    "entries": [["testHeaderKey", "testHeaderValue"]]
+  },
+  "ok":false
+}

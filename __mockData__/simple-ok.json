@@ -1,0 +1,8 @@
+{
+  "status": 200,
+  "headers": {
+    "entries": []
+  },
+  "ok":true,
+  "json": "{\"hello\": \"world\"}"
+}
