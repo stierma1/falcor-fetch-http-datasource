@@ -41,6 +41,18 @@ var source = new FetchDataSource('/model.json', {
   crossDomain: true
 });
 ```
+Agent (Node only)
+```javascript
+var source = new FetchDataSource('/model.json', {
+  agent: {...agentObject}
+});
+```
+Timeout
+```javascript
+var source = new FetchDataSource('/model.json', {
+  timeout: 5000
+});
+```
 OnResponse
 ```javascript
 var onResponse = function(url, statusCode, requestHeaders, responseHeaders, jsonBody){
@@ -50,4 +62,5 @@ var onResponse = function(url, statusCode, requestHeaders, responseHeaders, json
 var source = new FetchDataSource('/model.json', {
   onResponse:onResponse
 });
+
 ```

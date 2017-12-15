@@ -74,7 +74,9 @@ function request(method, options, context) {
     init.method = config.method;
     init.headers = config.headers || {};
     init.credentials = config.credentials || "omit";
-  
+    init.agent = config.agent || undefined;
+    init.timeout = config.timeout || undefined;
+
     if(config.data){
       init.body = config.data;
     }
