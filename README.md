@@ -20,7 +20,7 @@ var model = new falcor.Model({
 ```
 If you need some additional info for your global HTTP requests consider something like
 
-JWT
+Headers
 ```javascript
 var source = new FetchDataSource('/model.json', {
   headers: {
@@ -31,7 +31,7 @@ var source = new FetchDataSource('/model.json', {
 Cookies
 ```javascript
 var source = new FetchDataSource('/model.json', {
-  withCredentials: true
+  credentials: 'include'
 });
 // server must include the header `Access-Control-Allow-Credentials: true`
 ```
@@ -41,4 +41,13 @@ var source = new FetchDataSource('/model.json', {
   crossDomain: true
 });
 ```
-or you might want to pass it to constructor as your global AppSource
+OnResponse
+```javascript
+var onResponse = function(url, statusCode, requestHeaders, responseHeaders, jsonBody){
+  //json body will only be returned if statusCode is 200-299
+  console.log(url, statusCode, requestHeaders, responseHeaders, jsonBody);
+}
+var source = new FetchDataSource('/model.json', {
+  onResponse:onResponse
+});
+```
