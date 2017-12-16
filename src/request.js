@@ -37,7 +37,34 @@ Observable.create = function(subscribe) {
   return o;
 };
 
-function request(method, options, context) {
+function request(method, options, context){
+
+  if(options.retry === undefined || options.retry === 0){
+    return requestTry(method, options, context);
+  }
+  var retries = options.retry;
+  var tryObs = requestTry(method, options, context);
+  var returnObs = Observable.create(function(observer){
+    for(var i = 0; i < retries; i++){
+      tryObs.subscribe((data) => {
+        observer.onNext(data);
+        observer.onCompleted();
+      }, () => {
+        tryObs = requestTry(method, options, context);
+      }, () => {
+      })
+    }
+    tryObs.subscribe((data) => {
+      observer.onNext(data);
+      observer.onCompleted();
+    }, (err) => {
+      observer.onError(err);
+    })
+  });
+  return returnObs;
+}
+
+function requestTry(method, options, context) {
   return Observable.create(function requestObserver(observer) {
     if(!options.onResponse){
       options.onResponse = noop;
@@ -117,6 +144,7 @@ function request(method, options, context) {
       //May add abort to fetch
     };
   });
+
 }
 
 module.exports = request;

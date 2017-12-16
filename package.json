@@ -1,10 +1,10 @@
 {
   "name": "falcor-fetch-http-datasource",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Falcor Http DataSource using isomorphic fetch",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "repository": {
     "type": "git",

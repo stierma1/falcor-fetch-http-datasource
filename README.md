@@ -53,6 +53,16 @@ var source = new FetchDataSource('/model.json', {
   timeout: 5000
 });
 ```
+Retry
+```javascript
+var onResponse = function(url, statusCode, requestHeaders, responseHeaders, jsonBody){
+  //json body will only be returned if statusCode is 200-299
+  console.log(url, statusCode, requestHeaders, responseHeaders, jsonBody);
+}
+var source = new FetchDataSource('/model.json', {
+  retry:1
+});
+
 OnResponse
 ```javascript
 var onResponse = function(url, statusCode, requestHeaders, responseHeaders, jsonBody){

@@ -72,3 +72,43 @@ test('response headers can be collected even on 404', () => {
     expect(e).toBe("OK");
   });
 });
+
+test('response headers can be collected with retry', () => {
+  var onResponseValues = null;
+  function onResponse(...args){
+    onResponseValues = args;
+  }
+
+  return convertObsToPromise(
+    request("GET", {url:"simple-response-headers.json", retry:1, headers:{"requestHeaderKey":"requestHeaderValue"}, onResponse}, {})
+  ).then((data) => {
+    expect(data.hello).toBe("world");
+    expect(onResponseValues[0]).toBe("simple-response-headers.json");
+    expect(onResponseValues[1]).toBe(200);
+    expect(onResponseValues[2]).toMatchObject({"requestHeaderKey": "requestHeaderValue"});
+    expect(onResponseValues[3]).toMatchObject({"testHeaderKey":"testHeaderValue"});
+    expect(onResponseValues[4]).toMatchObject({hello:"world"});
+  });
+});
+
+test('response headers can be collected even on 404 with retry', () => {
+  var onResponseValues = null;
+  function onResponse(...args){
+    onResponseValues = args;
+  }
+
+  return convertObsToPromise(
+    request("GET", {url:"simple-response-headers-404.json", retry:1, headers:{"requestHeaderKey":"requestHeaderValue"}, onResponse}, {})
+  ).catch((err) => {
+    expect(err.message).toBe("Response code 404");
+    expect(onResponseValues[0]).toBe("simple-response-headers-404.json");
+    expect(onResponseValues[1]).toBe(404);
+    expect(onResponseValues[2]).toMatchObject({"requestHeaderKey": "requestHeaderValue"});
+    expect(onResponseValues[3]).toMatchObject({"testHeaderKey":"testHeaderValue"});
+    throw "OK";
+  }).then((data) => {
+    throw new Error("Was suppose to reject on 404 but did not");
+  }).catch((e) => {
+    expect(e).toBe("OK");
+  });
+});

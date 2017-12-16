@@ -91,3 +91,49 @@ test("test 404", () => {
   });
 
 });
+
+test("test integration with retry", () => {
+  var server = startServer();
+  var responsesReceived = 0;
+  var dataSource = new FetchHttpSource("http://127.0.0.1:8080/model.json", {
+    onResponse: (url, status, requestHeaders, responseHeaders) => {
+      responsesReceived++;
+      expect(requestHeaders["I-am-a-header"]).toBe("I am a value");
+      expect(responseHeaders["content-type"]).toBe("application/json; charset=utf-8")
+    },
+    headers:{"I-am-a-header": "I am a value"}
+  });
+
+  var model = new Falcor.Model({source: dataSource});
+  return model.get("users.id").then((jsong) => {
+    expect(jsong.json.users.id).toBe("john_doe");
+    expect(responsesReceived).toBe(1);
+    return model.get("users.id");
+  }).then(() => {
+    server.close();
+  });
+});
+
+test("test 404 with retry", () => {
+  var server = startServer();
+  var responsesReceived = 0;
+  var dataSource = new FetchHttpSource("http://127.0.0.1:8080/model2.json", {
+    retry:3,
+    onResponse: (url, status, requestHeaders, responseHeaders) => {
+      responsesReceived++;
+      expect(requestHeaders["I-am-a-header"]).toBe("I am a value");
+      expect(responseHeaders["content-type"]).toBe("text/html; charset=utf-8")
+    },
+    headers:{"I-am-a-header": "I am a value"}
+  });
+
+  var model = new Falcor.Model({source: dataSource});
+
+  return model.get("users.id").then(() => {}).catch((err) => {
+    expect(responsesReceived).toBe(4);
+    expect(err.message).toBe("Response code 404");
+  }).then(() => {
+    server.close();
+  });
+
+});
