@@ -1,6 +1,6 @@
 {
   "name": "falcor-fetch-http-datasource",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Falcor Http DataSource using isomorphic fetch",
   "main": "index.js",
   "scripts": {
