@@ -37,6 +37,24 @@ Observable.create = function(subscribe) {
   return o;
 };
 
+//Will recurse on error of the produced subscriber
+function onErrorClosure(observer, retries, method, options, context){
+  return function(err){
+    if(retries <= 0){
+      observer.onError(err);
+      return;
+    }
+    var retry = requestTry(method, options, context);
+    retry.subscribe(() => {
+        observer.onNext(data);
+        observer.onCompleted();
+      }, onErrorClosure(observer, retries - 1, method, options, context),
+      () => {}
+    );
+
+  }
+}
+
 function request(method, options, context){
 
   if(options.retry === undefined || options.retry === 0){
@@ -45,21 +63,11 @@ function request(method, options, context){
   var retries = options.retry;
   var tryObs = requestTry(method, options, context);
   var returnObs = Observable.create(function(observer){
-    for(var i = 0; i < retries; i++){
       tryObs.subscribe((data) => {
         observer.onNext(data);
         observer.onCompleted();
-      }, () => {
-        tryObs = requestTry(method, options, context);
-      }, () => {
-      })
-    }
-    tryObs.subscribe((data) => {
-      observer.onNext(data);
-      observer.onCompleted();
-    }, (err) => {
-      observer.onError(err);
-    })
+      }, onErrorClosure(observer, retries, method, options, context), () => {
+      });
   });
   return returnObs;
 }
