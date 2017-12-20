@@ -37,7 +37,7 @@ Observable.create = function(subscribe) {
   return o;
 };
 
-//Will recurse on error of the produced subscriber
+//Will recurse on error of the produced retried call
 function onErrorClosure(observer, retries, method, options, context){
   return function(err){
     if(retries <= 0){
@@ -45,7 +45,7 @@ function onErrorClosure(observer, retries, method, options, context){
       return;
     }
     var retry = requestTry(method, options, context);
-    retry.subscribe(() => {
+    retry.subscribe((data) => {
         observer.onNext(data);
         observer.onCompleted();
       }, onErrorClosure(observer, retries - 1, method, options, context),
@@ -134,14 +134,19 @@ function requestTry(method, options, context) {
 
         if(response.ok){
           return Promise.resolve(response.json()).then((json) => {
-            options.onResponse( config.url, response.status, init.headers, responseHeaders, json);
-            //Falcor can only receive json at the moment
-            observer.onNext(json);
-            observer.onCompleted();
+            return Promise.resolve(
+              options.onResponse(config.url, response.status, init.headers, responseHeaders, json, options)
+            ).then(() => {
+              //Falcor can only receive json at the moment
+              observer.onNext(json);
+              observer.onCompleted();
+            });
           });
         } else {
-          options.onResponse(config.url, response.status, init.headers, responseHeaders);
-          observer.onError(new Error('Response code ' + response.status))
+          return Promise.resolve(options.onResponse(config.url, response.status, init.headers, responseHeaders, undefined, options))
+            .then(() => {
+              observer.onError(new Error('Response code ' + response.status))
+            })
         }
       })
       .catch((err) => {

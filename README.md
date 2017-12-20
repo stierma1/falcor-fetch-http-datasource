@@ -62,10 +62,12 @@ var source = new FetchDataSource('/model.json', {
 ```
 OnResponse
 ```javascript
-var onResponse = function(url, statusCode, requestHeaders, responseHeaders, jsonBody){
+var onResponse = function(url, statusCode, requestHeaders, responseHeaders, jsonBody, options){
   //json body will only be returned if statusCode is 200-299
-  console.log(url, statusCode, requestHeaders, responseHeaders, jsonBody);
+  console.log(url, statusCode, requestHeaders, responseHeaders, jsonBody, options);
+  //You can update options for subsequent retry calls  
 }
+
 var source = new FetchDataSource('/model.json', {
   onResponse:onResponse
 });

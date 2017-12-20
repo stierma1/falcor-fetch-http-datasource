@@ -112,3 +112,23 @@ test('response headers can be collected even on 404 with retry', () => {
     expect(e).toBe("OK");
   });
 });
+
+test('onResponse can change retry calls config', () => {
+  var onResponseValues = null;
+  function onResponse(...args){
+    onResponseValues = args;
+    var config = args[args.length - 1]
+    config.url = "simple-response-headers.json";
+  }
+
+  return convertObsToPromise(
+    request("GET", {url:"simple-404.json", retry:1, headers:{"requestHeaderKey":"requestHeaderValue"}, onResponse}, {})
+  ).then((data) => {
+    expect(data.hello).toBe("world");
+    expect(onResponseValues[0]).toBe("simple-response-headers.json");
+    expect(onResponseValues[1]).toBe(200);
+    expect(onResponseValues[2]).toMatchObject({"requestHeaderKey": "requestHeaderValue"});
+    expect(onResponseValues[3]).toMatchObject({"testHeaderKey":"testHeaderValue"});
+    expect(onResponseValues[4]).toMatchObject({hello:"world"});
+  });
+});
