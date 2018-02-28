@@ -34,5 +34,18 @@ function mergeResponses(source, destination){
   return destination;
 }
 
+function getQueryVariable(url, variable) {
+  //console.log(url)
+  var urlSplit = url.split("?");
+    var query = urlSplit.length > 1 ? urlSplit[1].substring(0) : "";
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+        if (decodeURIComponent(pair[0]) == variable) {
+            return pair[1];
+        }
+    }
+    return undefined
+}
 
-module.exports = {mergeResponses, breakQueryIntoSubQueries};
+module.exports = {mergeResponses, breakQueryIntoSubQueries, getQueryVariable};

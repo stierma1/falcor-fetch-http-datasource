@@ -56,3 +56,35 @@ test('merge test 5', () => {
   var actual = mergeResponses(source, destination)
   expect(JSON.stringify(actual)).toBe(JSON.stringify(expected));
 });
+
+test('breakQueryIntoSubQueries test 1 - less than 2 queries', () => {
+  var paths = [["hello", "world"]];
+  var maxSize = 7000;
+  var actual = breakQueryIntoSubQueries(paths, maxSize);
+  var expected = [[["hello", "world"]]]
+  expect(JSON.stringify(actual)).toBe(JSON.stringify(expected));
+});
+
+test('breakQueryIntoSubQueries test 2 - should split due to size' , () => {
+  var paths = [["hello", "world"],["hello", "world2"],["hello", "world3"]];
+  var maxSize = 5;
+  var actual = breakQueryIntoSubQueries(paths, maxSize);
+  var expected = [[["hello", "world"],["hello", "world2"]], [["hello", "world3"]]]
+  expect(JSON.stringify(actual)).toBe(JSON.stringify(expected));
+});
+
+test('breakQueryIntoSubQueries test 3 - should split due to size again' , () => {
+  var paths = [["hello", "world"],["hello", "world2"],["hello", "world3"],["hello", "world4"],["hello", "world5"]];
+  var maxSize = 5;
+  var actual = breakQueryIntoSubQueries(paths, maxSize);
+  var expected = [[["hello", "world"],["hello", "world2"]], [["hello", "world3"]], [["hello", "world4"],["hello", "world5"]]]
+  expect(JSON.stringify(actual)).toBe(JSON.stringify(expected));
+});
+
+test('breakQueryIntoSubQueries test 4 - should not split due to size' , () => {
+  var paths = [["hello", "world"],["hello", "world2"],["hello", "world3"],["hello", "world4"],["hello", "world5"]];
+  var maxSize = 7000;
+  var actual = breakQueryIntoSubQueries(paths, maxSize);
+  var expected = [[["hello", "world"],["hello", "world2"], ["hello", "world3"], ["hello", "world4"],["hello", "world5"]]]
+  expect(JSON.stringify(actual)).toBe(JSON.stringify(expected));
+});

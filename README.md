@@ -59,6 +59,7 @@ Retry
 var source = new FetchDataSource('/model.json', {
   retry:1
 });
+
 ```
 OnResponse
 ```javascript
@@ -70,6 +71,16 @@ var onResponse = function(url, statusCode, requestHeaders, responseHeaders, json
 
 var source = new FetchDataSource('/model.json', {
   onResponse:onResponse
+});
+
+```
+
+MaxQuerySize
+```javascript
+//Will split the query based on how many characters are in the url.  If its over maxQuerySize the multiple requests will be made to the server by splitting up the query into smaller subqueries.
+// This should happen transparently and should not have any impact on the output value.
+var source = new FetchDataSource('/model.json', {
+  maxQuerySize:1 //Default is 7000 characters
 });
 
 ```

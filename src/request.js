@@ -1,4 +1,5 @@
 var fetch = require("isomorphic-fetch");
+var {mergeResponses, breakQueryIntoSubQueries, getQueryVariable} = require("./utils");
 var hasOwnProp = Object.prototype.hasOwnProperty;
 
 var noop = function() {};
@@ -116,6 +117,71 @@ function requestTry(method, options, context) {
       init.body = config.data;
     }
 
+    var paths = getQueryVariable(config.url, "paths");
+    var falcorMethod = getQueryVariable(config.url, "method");
+
+    var pathObjs = JSON.parse(decodeURIComponent(paths || "\"\""));
+
+    var subQueries = breakQueryIntoSubQueries(pathObjs, options.maxQuerySize || 7000);
+    var configBase = config.url.split("?")[0];
+    var fetches = [];
+    for(var i in subQueries){
+      var subQuery = subQueries[i];
+      let newUrl;
+      if(paths === undefined){
+        newUrl = configBase;
+      } else {
+        newUrl = configBase + "?paths=" + encodeURIComponent(JSON.stringify(subQuery)) + "&method=" + falcorMethod;
+      }
+
+      var fetchProm = fetch(newUrl, init)
+        .then((response) => {
+          let responseHeaders = {};
+          //Newer way of getting all headers
+          if(response.headers.entries){
+            for(var pair of response.headers.entries()){
+              var key = pair[0];
+              var value = pair[1];
+              responseHeaders[key] = value;
+            }
+          } else {
+            response.headers.forEach((value, key) => {
+              responseHeaders[key] = value;
+            });
+          }
+
+          if(response.ok){
+            return Promise.resolve(response.json()).then((json) => {
+              return Promise.resolve(
+                options.onResponse(config.url, response.status, init.headers, responseHeaders, json, options)
+              ).then(() => {
+                //Falcor can only receive json at the moment
+                return json;
+              });
+            });
+          } else {
+            return Promise.resolve(options.onResponse(config.url, response.status, init.headers, responseHeaders, undefined, options))
+              .then(() => {
+                throw new Error('Response code ' + response.status);
+              })
+          }
+        })
+
+        fetches.push(fetchProm);
+    }
+
+    Promise.all(fetches)
+      .then((values) => {
+        var mergedValue = values.reduce((reduced, value) => {
+          return mergeResponses(value, reduced)
+        }, {});
+        observer.onNext(mergedValue);
+        observer.onCompleted();
+      })
+      .catch((err) => {
+        observer.onError(err);
+      })
+    /*
     fetch(config.url, init)
       .then((response) => {
         let responseHeaders = {};
@@ -151,7 +217,7 @@ function requestTry(method, options, context) {
       })
       .catch((err) => {
         observer.onError(err);
-      });
+      });*/
 
     return function dispose() {
       //May add abort to fetch

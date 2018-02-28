@@ -1,7 +1,6 @@
 var fs = require("fs");
 var path = require("path");
 
-
 function fetch(url, init){
   return new Promise((resolve, reject) => {
     try{

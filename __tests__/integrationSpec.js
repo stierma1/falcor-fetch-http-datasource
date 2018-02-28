@@ -51,6 +51,28 @@ test("test integration", () => {
   });
 });
 
+test("test integration with query split", () => {
+  var server = startServer();
+  var dataSource = new FetchHttpSource("http://127.0.0.1:8080/model.json", {
+    onResponse: (url, status, requestHeaders, responseHeaders) => {
+      expect(requestHeaders["I-am-a-header"]).toBe("I am a value");
+      expect(responseHeaders["content-type"]).toBe("application/json; charset=utf-8")
+    },
+    maxQuerySize:1,
+    headers:{"I-am-a-header": "I am a value"}
+  });
+
+  var model = new Falcor.Model({source: dataSource});
+  return model.get("users.id", "users.name.first", "users.name.last").then((jsong) => {
+    expect(jsong.json.users.id).toBe("john_doe");
+    expect(jsong.json.users.name.first).toBe("John");
+    expect(jsong.json.users.name.last).toBe("Doe");
+    return model.get("users.id");
+  }).then(() => {
+    server.close();
+  });
+});
+
 test("test with credentials integration", () => {
   var server = startServer();
   var dataSource = new FetchHttpSource("http://127.0.0.1:8080/model.json", {
