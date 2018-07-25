@@ -1,5 +1,5 @@
 var fetch = require("isomorphic-fetch");
-var {mergeResponses, breakQueryIntoSubQueries, getQueryVariable} = require("./utils");
+var {mergeResponses, breakQueryIntoSubQueries, getQueryObj, buildUrl} = require("./utils");
 var hasOwnProp = Object.prototype.hasOwnProperty;
 
 var noop = function() {};
@@ -117,22 +117,27 @@ function requestTry(method, options, context) {
       init.body = config.data;
     }
 
-    var paths = getQueryVariable(config.url, "paths");
-    var falcorMethod = getQueryVariable(config.url, "method");
+    var queryMap = getQueryObj(config.url);
+    var { paths } = queryMap;
 
-    var pathObjs = JSON.parse(decodeURIComponent(paths || "\"\""));
-
+    try {
+      var pathObjs = JSON.parse(paths);
+    } catch (err) {
+      pathObjs = [];
+    }
+ 
     var subQueries = breakQueryIntoSubQueries(pathObjs, options.maxQuerySize || 7000);
-    var configBase = config.url.split("?")[0];
+    var configBaseUrl = config.url.split("?")[0];
     var fetches = [];
     for(var i in subQueries){
       var subQuery = subQueries[i];
-      let newUrl;
-      if(paths === undefined){
-        newUrl = configBase;
-      } else {
-        newUrl = configBase + "?paths=" + encodeURIComponent(JSON.stringify(subQuery)) + "&method=" + falcorMethod;
-      }
+      paths = JSON.stringify(subQuery);
+      const newUrl = buildUrl(
+        configBaseUrl,
+        Object.assign({}, queryMap, {
+          paths: subQuery.length ? paths : undefined 
+        })
+      );
 
       var fetchProm = fetch(newUrl, init)
         .then((response) => {

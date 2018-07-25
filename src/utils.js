@@ -34,18 +34,29 @@ function mergeResponses(source, destination){
   return destination;
 }
 
-function getQueryVariable(url, variable) {
-  //console.log(url)
+function getQueryObj(url) {
   var urlSplit = url.split("?");
-    var query = urlSplit.length > 1 ? urlSplit[1].substring(0) : "";
-    var vars = query.split('&');
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split('=');
-        if (decodeURIComponent(pair[0]) == variable) {
-            return pair[1];
-        }
-    }
-    return undefined
+  var query = urlSplit.length > 1 ? urlSplit[1].substring(0) : "";
+  return query.split('&').reduce((accumulator, part) => {
+    var pair = part.split('=');
+    accumulator[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+
+    return accumulator;
+  }, {});
 }
 
-module.exports = {mergeResponses, breakQueryIntoSubQueries, getQueryVariable};
+function buildUrl(url, queryMap) {
+  const queryString =  Object.keys(queryMap).reduce((accumulator, k) => {
+    const v = queryMap[k];
+
+    if (v && k) {
+      accumulator.push(encodeURIComponent(k) + "=" + encodeURIComponent(queryMap[k]));
+    }
+
+    return accumulator;
+  }, []).join('&');
+
+  return queryString.length ? url + "?" + queryString : url;
+}
+
+module.exports = {mergeResponses, breakQueryIntoSubQueries, getQueryObj, buildUrl};
